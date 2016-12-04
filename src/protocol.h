@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -138,6 +139,27 @@ extern const char *HEADERS;
  */
 extern const char *BLOCK;
 /**
+ * BUIP010 Xtreme Thinblocks: The thinblock message transmits a single serialized thinblock.
+ */
+extern const char *THINBLOCK;
+/**
+ * BUIP010 Xtreme Thinblocks: The xthinblock message transmits a single serializexd xthinblock.
+ */
+extern const char *XTHINBLOCK;
+/**
+ * BUIP010 Xtreme Thinblocks: The xblocktx message transmits a single serialized xblocktx.
+ */
+extern const char *XBLOCKTX;
+/**
+ * BUIP010 Xtreme Thinblocks: The get_xblocktx message transmits a single serialized get_xblocktx.
+ */
+extern const char *GET_XBLOCKTX;
+/**
+ * BUIP010 Xtreme Thinblocks: The get_xthin message transmits a single serialized get_xthin.
+ */
+extern const char *GET_XTHIN;
+
+/**
  * The getaddr message requests an addr message from the receiving node,
  * preferably one with lots of IP addresses of other receiving nodes.
  * @see https://bitcoin.org/en/developer-reference#getaddr
@@ -219,6 +241,35 @@ extern const char *REJECT;
  */
 extern const char *SENDHEADERS;
 
+/**
+ * Indicates that a node prefers to receive new block announcements 
+ * and transactions directly without INVs
+ * @since protocol version 80000.
+ */
+extern const char *XPEDITEDREQUEST;
+
+/**
+ * Block or transactions sent without explicit solicitation 
+ * @since protocol version 80000.
+ */
+extern const char *XPEDITEDBLK;
+/**
+ * Block or transactions sent without explicit solicitation 
+ * @since protocol version 80000.
+ */
+extern const char *XPEDITEDTXN;
+
+/**
+ * BU specific version information similar to NetMsgType::VERSION
+ * @since protocol version 80002.
+ */
+extern const char *BUVERSION;
+
+/**
+ * BU specific version information similar to NetMsgType::VERACK
+ * @since protocol version 80002.
+ */
+extern const char *BUVERACK;
 };
 
 /* Get a vector of all valid message types (see above) */
@@ -227,17 +278,24 @@ const std::vector<std::string> &getAllNetMessageTypes();
 /** nServices flags */
 enum {
     // NODE_NETWORK means that the node is capable of serving the block chain. It is currently
-    // set by all Bitcoin Core nodes, and is unset by SPV clients or other peers that just want
+    // set by all Bitcoin Unlimited nodes, and is unset by SPV clients or other peers that just want
     // network services but don't provide them.
     NODE_NETWORK = (1 << 0),
     // NODE_GETUTXO means the node is capable of responding to the getutxo protocol request.
-    // Bitcoin Core does not support this but a patch set called Bitcoin XT does.
+    // Bitcoin Unlimited does not support this but a patch set called Bitcoin XT does.
     // See BIP 64 for details on how this is implemented.
     NODE_GETUTXO = (1 << 1),
     // NODE_BLOOM means the node is capable and willing to handle bloom-filtered connections.
-    // Bitcoin Core nodes used to support this by default, without advertising this bit,
+    // Bitcoin Unlimited nodes used to support this by default, without advertising this bit,
     // but no longer do as of protocol version 70011 (= NO_BLOOM_VERSION)
     NODE_BLOOM = (1 << 2),
+
+    // BUIP010 - Xtreme Thinblocks - begin section
+    // NODE_XTHIN means the node supports Xtreme Thinblocks
+    // If this is turned off then the node will not service xthin requests nor  
+    // make xthin requests
+    NODE_XTHIN = (1 << 4),
+    // BUIP010 - Xtreme Thinblocks - end section
 
     // Bits 24-31 are reserved for temporary experiments. Just pick a bit that
     // isn't getting used, or one not being used much, and notify the
@@ -316,6 +374,12 @@ enum {
     // Nodes may always request a MSG_FILTERED_BLOCK in a getdata, however,
     // MSG_FILTERED_BLOCK should not appear in any invs except as a part of getdata.
     MSG_FILTERED_BLOCK,
+    // BUIP010 Xtreme Thinblocks: a thin block contains all the transactions hashes in a block
+    // and also provides the missing transactions that are needed at the other end to reconstruct the block
+    MSG_THINBLOCK,
+    // BUIP010 Xtreme Thinblocks: an Xtreme thin block contains the first 8 bytes of all the tx hashes 
+    // and also provides the missing transactions that are needed at the other end to reconstruct the block
+    MSG_XTHINBLOCK,
 };
 
 #endif // BITCOIN_PROTOCOL_H

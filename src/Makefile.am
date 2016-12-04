@@ -84,6 +84,7 @@ BITCOIN_CORE_H = \
   amount.h \
   arith_uint256.h \
   base58.h \
+  bitnodes.h \
   bloom.h \
   chain.h \
   chainparams.h \
@@ -118,6 +119,7 @@ BITCOIN_CORE_H = \
   merkleblock.h \
   miner.h \
   net.h \
+  leakybucket.h \
   netbase.h \
   noui.h \
   policy/fees.h \
@@ -148,6 +150,7 @@ BITCOIN_CORE_H = \
   support/cleanse.h \
   support/pagelocker.h \
   sync.h \
+  thinblock.h \
   threadsafety.h \
   timedata.h \
   tinyformat.h \
@@ -157,6 +160,10 @@ BITCOIN_CORE_H = \
   ui_interface.h \
   uint256.h \
   undo.h \
+  unlimited.h \
+  stat.h \
+  tweak.h \
+  requestManager.h \
   util.h \
   utilmoneystr.h \
   utilstrencodings.h \
@@ -185,8 +192,10 @@ libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 libbitcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
+  globals.cpp \
   addrman.cpp \
   alert.cpp \
+  bitnodes.cpp \
   bloom.cpp \
   chain.cpp \
   checkpoints.cpp \
@@ -210,10 +219,14 @@ libbitcoin_server_a_SOURCES = \
   rpcrawtransaction.cpp \
   rpcserver.cpp \
   script/sigcache.cpp \
+  thinblock.cpp \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
+  tweak.cpp \
+  unlimited.cpp \
+  requestManager.cpp \
   validationinterface.cpp \
   versionbits.cpp \
   $(BITCOIN_CORE_H)

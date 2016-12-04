@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +16,7 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "utiltime.h"
+#include "unlimited.h"
 #include "version.h"
 
 using namespace std;
@@ -85,7 +87,7 @@ bool CTxMemPool::UpdateForDescendants(txiter updateIt, int maxDescendantsToVisit
             return false;
         }
         setAllDescendants.insert(cit);
-        stageEntries.erase(cit);
+        stageEntries.erase(cit);  // BU its ok to erase here because GetMemPoolChildren does not dereference cit
         const setEntries &setChildren = GetMemPoolChildren(cit);
         BOOST_FOREACH(const txiter childEntry, setChildren) {
             cacheMap::iterator cacheIt = cachedDescendants.find(childEntry);
@@ -211,7 +213,7 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
         txiter stageit = *parentHashes.begin();
 
         setAncestors.insert(stageit);
-        parentHashes.erase(stageit);
+        // parentHashes.erase(stageit);  // BU: Core bug, use after free, moved below
         totalSizeWithAncestors += stageit->GetTxSize();
 
         if (stageit->GetSizeWithDescendants() + entry.GetTxSize() > limitDescendantSize) {
@@ -231,11 +233,14 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
             if (setAncestors.count(phash) == 0) {
                 parentHashes.insert(phash);
             }
-            if (parentHashes.size() + setAncestors.size() + 1 > limitAncestorCount) {
+            // removed +1 from test below as per BU: Fix use after free bug
+            if (parentHashes.size() + setAncestors.size() > limitAncestorCount) {
                 errString = strprintf("too many unconfirmed ancestors [limit: %u]", limitAncestorCount);
                 return false;
             }
         }
+
+        parentHashes.erase(stageit);  // BU: Fix use after free bug by moving this last
     }
 
     return true;
@@ -417,6 +422,8 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
 
     nTransactionsUpdated++;
     totalTxSize += entry.GetTxSize();
+    txAdded +=1;  // BU
+    poolSize() = totalTxSize; // BU
     minerPolicyEstimator->processTransaction(entry, fCurrentEstimate);
 
     return true;
@@ -455,7 +462,7 @@ void CTxMemPool::CalculateDescendants(txiter entryit, setEntries &setDescendants
     while (!stage.empty()) {
         txiter it = *stage.begin();
         setDescendants.insert(it);
-        stage.erase(it);
+        stage.erase(it);  // BU its ok to erase here because GetMemPoolChildren does not dereference it
 
         const setEntries &setChildren = GetMemPoolChildren(it);
         BOOST_FOREACH(const txiter &childiter, setChildren) {
@@ -1007,3 +1014,23 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<uint256>* pvNoSpendsRe
     if (maxFeeRateRemoved > CFeeRate(0))
         LogPrint("mempool", "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
 }
+
+// BU: begin
+void CTxMemPool::UpdateTransactionsPerSecond()
+{
+    static int64_t nLastTime = GetTime();
+    double nSecondsToAverage = 60; // Length of time in seconds to smooth the tx rate over
+    int64_t nNow = GetTime();
+
+    // Decay the previous tx rate.  
+    int64_t nDeltaTime = nNow - nLastTime;
+    if (nDeltaTime > 0) {
+        nTxPerSec -= (nTxPerSec / nSecondsToAverage) * nDeltaTime;
+        nLastTime = nNow;
+    }
+
+    // Add the new tx to the rate
+    nTxPerSec += 1/nSecondsToAverage; // The amount that the new tx will add to the tx rate
+    if (nTxPerSec < 0) nTxPerSec = 0;
+}
+// BU: end

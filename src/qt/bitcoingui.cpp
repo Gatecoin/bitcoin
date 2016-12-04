@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +17,7 @@
 #include "platformstyle.h"
 #include "rpcconsole.h"
 #include "utilitydialog.h"
+#include "unlimiteddialog.h" // BU
 
 #ifdef ENABLE_WALLET
 #include "walletframe.h"
@@ -96,6 +98,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *platformStyle, const NetworkStyle *n
     receiveCoinsAction(0),
     receiveCoinsMenuAction(0),
     optionsAction(0),
+    unlimitedAction(0),             
     toggleHideAction(0),
     encryptWalletAction(0),
     backupWalletAction(0),
@@ -325,6 +328,11 @@ void BitcoinGUI::createActions()
     toggleHideAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&Show / Hide"), this);
     toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
 
+    // BU
+    unlimitedAction = new QAction(platformStyle->TextColorIcon(":/icons/options"), tr("&Unlimited..."), this);
+    unlimitedAction->setStatusTip(tr("Modify Bitcoin Unlimited Options"));
+    unlimitedAction->setMenuRole(QAction::PreferencesRole);
+
     encryptWalletAction = new QAction(platformStyle->TextColorIcon(":/icons/lock_closed"), tr("&Encrypt Wallet..."), this);
     encryptWalletAction->setStatusTip(tr("Encrypt the private keys that belong to your wallet"));
     encryptWalletAction->setCheckable(true);
@@ -356,6 +364,7 @@ void BitcoinGUI::createActions()
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
+    connect(unlimitedAction, SIGNAL(triggered()), this, SLOT(unlimitedClicked()));
     connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
     connect(showHelpMessageAction, SIGNAL(triggered()), this, SLOT(showHelpMessageClicked()));
     connect(openRPCConsoleAction, SIGNAL(triggered()), this, SLOT(showDebugWindow()));
@@ -413,6 +422,7 @@ void BitcoinGUI::createMenuBar()
         settings->addSeparator();
     }
     settings->addAction(optionsAction);
+    settings->addAction(unlimitedAction);
 
     QMenu *help = appMenuBar->addMenu(tr("&Help"));
     if(walletFrame)
@@ -566,6 +576,7 @@ void BitcoinGUI::createTrayIconMenu()
     trayIconMenu->addAction(verifyMessageAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(optionsAction);
+    trayIconMenu->addAction(unlimitedAction);
     trayIconMenu->addAction(openRPCConsoleAction);
 #ifndef Q_OS_MAC // This is built-in on Mac
     trayIconMenu->addSeparator();
@@ -791,34 +802,41 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     progressBar->setToolTip(tooltip);
 }
 
+CLeakyBucket infoShowTime(20000, 10); // BU: This leaky bucket is used to skip GUI tray notifications if we are sending them too fast
+
 void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
     QString strTitle = tr("Bitcoin"); // default title
     // Default to information icon
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;
+    int showTime = 10000;
 
     QString msgType;
+
+    switch (style) {
+        case CClientUIInterface::MSG_ERROR:
+            showTime = 20000; // BU: set display time to 20 seconds if its an error
+            msgType = tr("Error");
+            break;
+        case CClientUIInterface::MSG_WARNING:
+            showTime = 15000; // BU: set display time to 15 seconds if its an error
+            msgType = tr("Warning");
+            break;
+        case CClientUIInterface::MSG_INFORMATION:
+            showTime = infoShowTime.available();
+            if (showTime >= NOTIFY_MIN_SHOW_TIME) infoShowTime.try_leak(std::min(showTime,1000));  // BU: If we are going to show this notification, leak a second or more out of the bucket
+            msgType = tr("Information");            
+            break;
+        default:
+            break;
+        }
 
     // Prefer supplied title over style based title
     if (!title.isEmpty()) {
         msgType = title;
     }
-    else {
-        switch (style) {
-        case CClientUIInterface::MSG_ERROR:
-            msgType = tr("Error");
-            break;
-        case CClientUIInterface::MSG_WARNING:
-            msgType = tr("Warning");
-            break;
-        case CClientUIInterface::MSG_INFORMATION:
-            msgType = tr("Information");
-            break;
-        default:
-            break;
-        }
-    }
+
     // Append title to "Bitcoin - "
     if (!msgType.isEmpty())
         strTitle += " - " + msgType;
@@ -847,7 +865,7 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
             *ret = r == QMessageBox::Ok;
     }
     else
-        notificator->notify((Notificator::Class)nNotifyIcon, strTitle, message);
+      if (showTime>=NOTIFY_MIN_SHOW_TIME) notificator->notify((Notificator::Class)nNotifyIcon, strTitle, message, QIcon(), showTime);  // BU: If we want to display for at least 1 second then show it.  Actually, practice it looks like the system tray has a several second minimum.
 }
 
 void BitcoinGUI::changeEvent(QEvent *e)
@@ -1141,4 +1159,13 @@ void UnitDisplayStatusBarControl::onMenuSelection(QAction* action)
     {
         optionsModel->setDisplayUnit(action->data());
     }
+}
+
+void BitcoinGUI::unlimitedClicked()
+{
+    if(!clientModel || !clientModel->unlimitedModel)
+        return;
+
+    UnlimitedDialog dlg(this,clientModel->unlimitedModel);
+    dlg.exec();
 }

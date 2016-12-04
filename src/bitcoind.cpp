@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,7 @@
 #include "httpserver.h"
 #include "httprpc.h"
 #include "rpcserver.h"
+#include "unlimited.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -162,6 +163,8 @@ bool AppInit(int argc, char* argv[])
         PrintExceptionContinue(NULL, "AppInit()");
     }
 
+    UnlimitedSetup();
+    
     if (!fRet)
     {
         Interrupt(threadGroup);

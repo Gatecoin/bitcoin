@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,8 +17,11 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "version.h"
+#include "thinblock.h"
+#include "unlimited.h"
 
 #include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <univalue.h>
 
@@ -79,9 +83,9 @@ static void CopyNodeStats(std::vector<CNodeStats>& vstats)
 
 UniValue getpeerinfo(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() != 0)
+    if (fHelp || params.size() > 1)
         throw runtime_error(
-            "getpeerinfo\n"
+            "getpeerinfo [peer IP address]\n"
             "\nReturns data about each connected network node as a json array of objects.\n"
             "\nResult:\n"
             "[\n"
@@ -125,8 +129,17 @@ UniValue getpeerinfo(const UniValue& params, bool fHelp)
     CopyNodeStats(vstats);
 
     UniValue ret(UniValue::VARR);
+    CNode* node = NULL;
+    if (params.size() > 0)  // BU allow params to this RPC call
+      {
+	string nodeName = params[0].get_str();
+        node = FindLikelyNode(nodeName);
+        if (!node) throw runtime_error("Unknown node");        
+      }
 
     BOOST_FOREACH(const CNodeStats& stats, vstats) {
+      if (!node || (node->id == stats.nodeid))
+	{
         UniValue obj(UniValue::VOBJ);
         CNodeStateStats statestats;
         bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
@@ -166,6 +179,7 @@ UniValue getpeerinfo(const UniValue& params, bool fHelp)
         obj.push_back(Pair("whitelisted", stats.fWhitelisted));
 
         ret.push_back(obj);
+	}
     }
 
     return ret;
@@ -195,6 +209,8 @@ UniValue addnode(const UniValue& params, bool fHelp)
     if (strCommand == "onetry")
     {
         CAddress addr;
+        //NOTE: Using RPC "addnode <node> onetry" ignores both the "maxconnections"
+        //      and "maxoutconnections" limits and can cause both to be exceeded.
         OpenNetworkConnection(addr, NULL, strNode.c_str());
         return NullUniValue;
     }
@@ -234,6 +250,8 @@ UniValue disconnectnode(const UniValue& params, bool fHelp)
             + HelpExampleRpc("disconnectnode", "\"192.168.0.6:8333\"")
         );
 
+    //BU: Add lock on cs_vNodes as FindNode now requries it to prevent potential use-after-free errors
+    LOCK(cs_vNodes);
     CNode* pNode = FindNode(params[0].get_str());
     if (pNode == NULL)
         throw JSONRPCError(RPC_CLIENT_NODE_NOT_CONNECTED, "Node not found in connected nodes");
@@ -423,6 +441,27 @@ static UniValue GetNetworksInfo()
     return networks;
 }
 
+// BitcoinUnlimited BUIP010 : Start
+static UniValue GetThinBlockStats()
+{
+    UniValue obj(UniValue::VOBJ);
+    bool enabled = IsThinBlocksEnabled();
+    obj.push_back(Pair("enabled", enabled));
+    if (enabled) {
+        obj.push_back(Pair("summary", CThinBlockStats::ToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::MempoolLimiterBytesSavedToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::InBoundPercentToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::OutBoundPercentToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::ResponseTimeToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::ValidationTimeToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::OutBoundBloomFiltersToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::InBoundBloomFiltersToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::ReRequestedTxToString()));
+    }
+    return obj;
+}
+// BitcoinUnlimited BUIP010 : End
+
 UniValue getnetworkinfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -456,6 +495,7 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
             "  ,...\n"
             "  ]\n"
             "  \"warnings\": \"...\"                    (string) any network warnings (such as alert messages) \n"
+            "  \"thinblockstats\": \"...\"              (string) thin block related statistics \n" 
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getnetworkinfo", "")
@@ -466,7 +506,7 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
 
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("version",       CLIENT_VERSION));
-    obj.push_back(Pair("subversion",    strSubVersion));
+    obj.push_back(Pair("subversion", FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, BUComments)));  // BUIP005: special subversion
     obj.push_back(Pair("protocolversion",PROTOCOL_VERSION));
     obj.push_back(Pair("localservices",       strprintf("%016x", nLocalServices)));
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));
@@ -486,6 +526,9 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
         }
     }
     obj.push_back(Pair("localaddresses", localAddresses));
+// BitcoinUnlimited BUIP010: Start
+    obj.push_back(Pair("thinblockstats", GetThinBlockStats()));
+// BitcoinUnlimited BUIP010: End
     obj.push_back(Pair("warnings",       GetWarnings("statusbar")));
     return obj;
 }
@@ -542,8 +585,10 @@ UniValue setban(const UniValue& params, bool fHelp)
         isSubnet ? CNode::Ban(subNet, BanReasonManuallyAdded, banTime, absolute) : CNode::Ban(netAddr, BanReasonManuallyAdded, banTime, absolute);
 
         //disconnect possible nodes
-        while(CNode *bannedNode = (isSubnet ? FindNode(subNet) : FindNode(netAddr)))
-            bannedNode->fDisconnect = true;
+        if (!isSubnet) subNet = CSubNet(netAddr);
+        DisconnectSubNetNodes(subNet);//BU: Since we need to mark any nodes in subNet for disconnect, atomically mark all nodes at once
+        //while(CNode *bannedNode = (isSubnet ? FindNode(subNet) : FindNode(netAddr)))
+        //    bannedNode->fDisconnect = true;
     }
     else if(strCommand == "remove")
     {

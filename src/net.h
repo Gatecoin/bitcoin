@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,6 +11,7 @@
 #include "compat.h"
 #include "limitedmap.h"
 #include "netbase.h"
+#include "primitives/block.h"
 #include "protocol.h"
 #include "random.h"
 #include "streams.h"
@@ -27,6 +29,9 @@
 #include <boost/foreach.hpp>
 #include <boost/signals2/signal.hpp>
 
+#include "unlimited.h"
+#include "stat.h"
+
 class CAddrMan;
 class CScheduler;
 class CNode;
@@ -43,8 +48,10 @@ static const int TIMEOUT_INTERVAL = 20 * 60;
 static const unsigned int MAX_INV_SZ = 50000;
 /** The maximum number of new addresses to accumulate before announcing. */
 static const unsigned int MAX_ADDR_TO_SEND = 1000;
+/** The maximum # of bytes to receive at once */
+static const int64_t MAX_RECV_CHUNK = 256 * 1024;
 /** Maximum length of incoming protocol messages (no message over 2 MiB is currently acceptable). */
-static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 2 * 1024 * 1024;
+//static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 2 * 1024 * 1024;  // BU: currently allowing 10*excessiveBlockSize as the max message
 /** Maximum length of strSubVer in `version` message */
 static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 /** -listen default */
@@ -61,10 +68,16 @@ static const size_t MAPASKFOR_MAX_SZ = MAX_INV_SZ;
 static const size_t SETASKFOR_MAX_SZ = 2 * MAX_INV_SZ;
 /** The maximum number of peer connections to maintain. */
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
+/** BU: The maximum numer of outbound peer connections */
+static const unsigned int DEFAULT_MAX_OUTBOUND_CONNECTIONS = 8;
 /** The default for -maxuploadtarget. 0 = Unlimited */
 static const uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
 /** Default for blocks only*/
 static const bool DEFAULT_BLOCKSONLY = false;
+
+// BITCOINUNLIMITED START
+static const bool DEFAULT_FORCEBITNODES = false;
+// BITCOINUNLIMITED END
 
 static const bool DEFAULT_FORCEDNSSEED = false;
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
@@ -82,6 +95,7 @@ CNode* FindNode(const CNetAddr& ip);
 CNode* FindNode(const CSubNet& subNet);
 CNode* FindNode(const std::string& addrName);
 CNode* FindNode(const CService& ip);
+int DisconnectSubNetNodes(const CSubNet& subNet);
 CNode* ConnectNode(CAddress addrConnect, const char *pszDest = NULL);
 bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false);
 void MapPort(bool fUseUPnP);
@@ -89,7 +103,7 @@ unsigned short GetListenPort();
 bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
 void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler);
 bool StopNode();
-void SocketSendData(CNode *pnode);
+int SocketSendData(CNode* pnode);
 
 typedef int NodeId;
 
@@ -310,6 +324,15 @@ public:
 
 typedef std::map<CSubNet, CBanEntry> banmap_t;
 
+#if 0  // BU cleaning up nodes as a global destructor creates many global destruction dependencies.  Instead use a function call.
+class CNetCleanup
+{
+public:
+  CNetCleanup() {}
+  ~CNetCleanup();
+};
+#endif
+
 /** Information about a peer */
 class CNode
 {
@@ -330,12 +353,17 @@ public:
     uint64_t nRecvBytes;
     int nRecvVersion;
 
+    // BU connection de-prioritization
+    // Total bytes sent and received
+    uint64_t nActivityBytes;
+
     int64_t nLastSend;
     int64_t nLastRecv;
     int64_t nTimeConnected;
     int64_t nTimeOffset;
     CAddress addr;
     std::string addrName;
+    const char* currentCommand;  // if in the middle of the send, this is the command type
     CService addrLocal;
     int nVersion;
     // strSubVer is whatever byte array we read from the wire. However, this field is intended
@@ -358,10 +386,26 @@ public:
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
     CBloomFilter* pfilter;
+    CBloomFilter* pThinBlockFilter; // BU - Xtreme Thinblocks: a bloom filter which is separate from the one used by SPV wallets
     int nRefCount;
     NodeId id;
-protected:
 
+    // BUIP010 Xtreme Thinblocks: begin section
+    CBlock thinBlock;
+    std::vector<uint256> thinBlockHashes;
+    std::vector<uint64_t> xThinBlockHashes;
+    int nSizeThinBlock;   // Original on-wire size of the block. Just used for reporting
+    int thinBlockWaitingForTxns;   // if -1 then not currently waiting
+    std::map<uint256, uint64_t> mapThinBlocksInFlight; // map of the hashes of thin blocks in flight with the time they were requested.
+    double nGetXBlockTxCount; // Count how many get_xblocktx requests are made
+    uint64_t nGetXBlockTxLastTime;  // The last time a get_xblocktx request was made
+    double nGetXthinCount; // Count how many get_xthin requests are made
+    uint64_t nGetXthinLastTime;  // The last time a get_xthin request was made
+    // BUIP010 Xtreme Thinblocks: end section
+
+    unsigned short addrFromPort;
+
+protected:
     // Denial-of-service detection/prevention
     // Key is IP address, value is banned-until-time
     static banmap_t setBanned;
@@ -410,6 +454,27 @@ public:
     int64_t nMinPingUsecTime;
     // Whether a ping is requested.
     bool fPingQueued;
+
+    // BU instrumentation
+    // track the number of bytes sent to this node
+    CStatHistory<unsigned int > bytesSent;
+    // track the number of bytes received from this node
+    CStatHistory<unsigned int > bytesReceived;
+    // track the average round trip latency for transaction requests to this node
+    CStatHistory<unsigned int > txReqLatency;
+    // track the # of times this node is the first to send us a transaction INV
+    CStatHistory<unsigned int> firstTx;
+    // track the # of times this node is the first to send us a block INV
+    CStatHistory<unsigned int> firstBlock;
+    // track the # of times we sent this node a block
+    CStatHistory<unsigned int> blocksSent;
+    // track the # of times we sent this node a transaction
+    CStatHistory<unsigned int> txsSent;
+    // track the # of times we sent this node a transaction
+    CStatHistory<unsigned int> sendGap;
+    // track the # of times we sent this node a transaction
+    CStatHistory<unsigned int> recvGap;
+
 
     CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();
@@ -473,7 +538,12 @@ public:
         nRefCount--;
     }
 
-
+    // BUIP010:
+    bool ThinBlockCapable()
+    {
+        if (nServices & NODE_XTHIN) return true;
+        return false;
+    }
 
     void AddAddressKnown(const CAddress& addr)
     {

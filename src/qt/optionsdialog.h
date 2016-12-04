@@ -7,9 +7,12 @@
 
 #include <QDialog>
 #include <QValidator>
+#include <QIntValidator>
 
 class OptionsModel;
 class QValidatedLineEdit;
+class QLineEdit;
+class QLabel;
 
 QT_BEGIN_NAMESPACE
 class QDataWidgetMapper;
@@ -61,6 +64,8 @@ Q_SIGNALS:
 
 private:
     Ui::OptionsDialog *ui;
+    QIntValidator portValidator;
+    QIntValidator proxyPortValidator;
     OptionsModel *model;
     QDataWidgetMapper *mapper;
 };

@@ -14,6 +14,7 @@
 #include "script/sign.h"
 #include <univalue.h>
 #include "util.h"
+#include "sync.h"
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
 
@@ -21,8 +22,15 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/assign/list_of.hpp>
+#include <boost/thread.hpp>
 
 using namespace std;
+
+// BU add lockstack stuff here for bitcoin-cli, because I need to carefully
+// order it in globals.cpp for bitcoind and bitcoin-qt
+boost::mutex dd_mutex;
+std::map<std::pair<void*, void*>, LockStack> lockorders;
+boost::thread_specific_ptr<LockStack> lockstack;
 
 static bool fCreateBlank;
 static map<string,UniValue> registers;
@@ -191,7 +199,7 @@ static void MutateTxAddInput(CMutableTransaction& tx, const string& strInput)
     uint256 txid(uint256S(strTxid));
 
     static const unsigned int minTxOutSz = 9;
-    static const unsigned int maxVout = MAX_BLOCK_SIZE / minTxOutSz;
+    static const unsigned int maxVout = BLOCKSTREAM_CORE_MAX_BLOCK_SIZE / minTxOutSz;
 
     // extract and validate vout
     string strVout = strInput.substr(pos + 1, string::npos);

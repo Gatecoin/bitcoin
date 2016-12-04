@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,8 +28,9 @@ class CBlockIndex;
 static const int64_t nClientStartupTime = GetTime();
 static int64_t nLastBlockTipUpdateNotification = 0;
 
-ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
+ClientModel::ClientModel(OptionsModel *optionsModel, UnlimitedModel* ul, QObject *parent) :
     QObject(parent),
+    unlimitedModel(ul),
     optionsModel(optionsModel),
     peerTableModel(0),
     banTableModel(0),
@@ -98,6 +100,13 @@ size_t ClientModel::getMempoolDynamicUsage() const
     return mempool.DynamicMemoryUsage();
 }
 
+// BU: begin
+double ClientModel::getTransactionsPerSecond() const
+{
+    return mempool.TransactionsPerSecond();
+}
+// BU: end
+
 double ClientModel::getVerificationProgress(const CBlockIndex *tipIn) const
 {
     CBlockIndex *tip = const_cast<CBlockIndex *>(tipIn);
@@ -115,6 +124,7 @@ void ClientModel::updateTimer()
     // the following calls will aquire the required lock
     Q_EMIT mempoolSizeChanged(getMempoolSize(), getMempoolDynamicUsage());
     Q_EMIT bytesChanged(getTotalBytesRecv(), getTotalBytesSent());
+    Q_EMIT transactionsPerSecondChanged(getTransactionsPerSecond()); // BU:
 }
 
 void ClientModel::updateNumConnections(int numConnections)

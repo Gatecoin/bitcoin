@@ -1,4 +1,5 @@
 // Copyright (c) 2014-2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +18,7 @@ class CBaseChainParams
 public:
     /** BIP70 chain name strings (main, test or regtest) */
     static const std::string MAIN;
+    static const std::string UNL;
     static const std::string TESTNET;
     static const std::string REGTEST;
 

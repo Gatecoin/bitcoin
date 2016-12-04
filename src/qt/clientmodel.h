@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +12,7 @@
 class AddressTableModel;
 class BanTableModel;
 class OptionsModel;
+class UnlimitedModel;
 class PeerTableModel;
 class TransactionTableModel;
 
@@ -41,7 +43,7 @@ class ClientModel : public QObject
     Q_OBJECT
 
 public:
-    explicit ClientModel(OptionsModel *optionsModel, QObject *parent = 0);
+    explicit ClientModel(OptionsModel *optionsModel, UnlimitedModel* ul, QObject *parent = 0);
     ~ClientModel();
 
     OptionsModel *getOptionsModel();
@@ -57,6 +59,9 @@ public:
     //! Return the dynamic memory usage of the mempool
     size_t getMempoolDynamicUsage() const;
     
+    //! BU: Return the transactions per second that are accepted into the mempool
+    double getTransactionsPerSecond() const;
+
     quint64 getTotalBytesRecv() const;
     quint64 getTotalBytesSent() const;
 
@@ -76,6 +81,7 @@ public:
     bool isReleaseVersion() const;
     QString clientName() const;
     QString formatClientStartupTime() const;
+    UnlimitedModel *unlimitedModel;
 
 private:
     OptionsModel *optionsModel;
@@ -93,6 +99,7 @@ Q_SIGNALS:
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
+    void transactionsPerSecondChanged(double tansactionsPerSecond);  // BU:
 
     //! Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);

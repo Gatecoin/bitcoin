@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,6 +36,18 @@ const char *FILTERADD="filteradd";
 const char *FILTERCLEAR="filterclear";
 const char *REJECT="reject";
 const char *SENDHEADERS="sendheaders";
+// BUIP010 Xtreme Thinblocks - begin section
+const char *THINBLOCK="thinblock";
+const char *XTHINBLOCK="xthinblock";
+const char *XBLOCKTX="xblocktx";
+const char *GET_XBLOCKTX="get_xblocktx";
+const char *GET_XTHIN="get_xthin";
+// BUIP010 Xtreme Thinblocks - end section
+const char *XPEDITEDREQUEST="req_xpedited";
+const char *XPEDITEDBLK="Xb";
+const char *XPEDITEDTxn="Xt";
+const char *BUVERSION="buversion";
+const char *BUVERACK="buverack";
 };
 
 static const char* ppszTypeName[] =
@@ -42,7 +55,13 @@ static const char* ppszTypeName[] =
     "ERROR", // Should never occur
     NetMsgType::TX,
     NetMsgType::BLOCK,
-    "filtered block" // Should never occur
+    "filtered block", // Should never occur
+    // BUIP010 Xtreme Thinblocks - begin section
+    NetMsgType::THINBLOCK,
+    NetMsgType::XTHINBLOCK,
+    NetMsgType::XBLOCKTX,
+    NetMsgType::GET_XBLOCKTX,
+    // BUIP010 Xtreme Thinblocks - end section
 };
 
 /** All known message types. Keep this in the same order as the list of
@@ -70,7 +89,19 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::FILTERADD,
     NetMsgType::FILTERCLEAR,
     NetMsgType::REJECT,
-    NetMsgType::SENDHEADERS
+    NetMsgType::SENDHEADERS,
+    // BUIP010 Xtreme Thinbocks - begin section
+    NetMsgType::THINBLOCK,
+    NetMsgType::XTHINBLOCK,
+    NetMsgType::XBLOCKTX,
+    NetMsgType::GET_XBLOCKTX,
+    NetMsgType::GET_XTHIN,
+    // BUIP010 Xtreme Thinbocks - end section
+    NetMsgType::XPEDITEDREQUEST,
+    NetMsgType::XPEDITEDBLK,
+    NetMsgType::XPEDITEDTxn,
+    NetMsgType::BUVERSION,
+    NetMsgType::BUVERACK,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 

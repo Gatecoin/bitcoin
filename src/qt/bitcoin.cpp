@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +17,7 @@
 #include "networkstyle.h"
 #include "optionsmodel.h"
 #include "platformstyle.h"
+#include "unlimitedmodel.h" // BU
 #include "splashscreen.h"
 #include "utilitydialog.h"
 #include "winshutdownmonitor.h"
@@ -236,6 +238,7 @@ Q_SIGNALS:
 private:
     QThread *coreThread;
     OptionsModel *optionsModel;
+    UnlimitedModel *unlimitedModel;
     ClientModel *clientModel;
     BitcoinGUI *window;
     QTimer *pollShutdownTimer;
@@ -297,6 +300,7 @@ BitcoinApplication::BitcoinApplication(int &argc, char **argv):
     QApplication(argc, argv),
     coreThread(0),
     optionsModel(0),
+    unlimitedModel(0),
     clientModel(0),
     window(0),
     pollShutdownTimer(0),
@@ -339,6 +343,8 @@ BitcoinApplication::~BitcoinApplication()
     optionsModel = 0;
     delete platformStyle;
     platformStyle = 0;
+    delete unlimitedModel;
+    unlimitedModel=0;
 }
 
 #ifdef ENABLE_WALLET
@@ -351,6 +357,7 @@ void BitcoinApplication::createPaymentServer()
 void BitcoinApplication::createOptionsModel(bool resetSettings)
 {
     optionsModel = new OptionsModel(NULL, resetSettings);
+    unlimitedModel = new UnlimitedModel();  // BU
 }
 
 void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
@@ -443,7 +450,7 @@ void BitcoinApplication::initializeResult(int retval)
         paymentServer->setOptionsModel(optionsModel);
 #endif
 
-        clientModel = new ClientModel(optionsModel);
+        clientModel = new ClientModel(optionsModel,unlimitedModel);
         window->setClientModel(clientModel);
 
 #ifdef ENABLE_WALLET
@@ -657,6 +664,8 @@ int main(int argc, char *argv[])
     if (GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());
 
+    UnlimitedSetup();
+
     try
     {
         app.createWindow(networkStyle.data());
@@ -674,6 +683,10 @@ int main(int argc, char *argv[])
         PrintExceptionContinue(NULL, "Runaway exception");
         app.handleRunawayException(QString::fromStdString(strMiscWarning));
     }
+
+    NetCleanup();
+    MainCleanup();
+
     return app.getReturnValue();
 }
 #endif // BITCOIN_QT_TEST
