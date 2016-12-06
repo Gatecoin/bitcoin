@@ -204,7 +204,7 @@ static void MutateTxAddInput(CMutableTransaction& tx, const string& strInput)
     // extract and validate vout
     string strVout = strInput.substr(pos + 1, string::npos);
     int vout = atoi(strVout);
-    if ((vout < 0) || (vout > (int)maxVout))
+    if ((vout < 0) || (vout > (int)maxVout))  // BU: be strict about what is generated.  TODO: BLOCKSTREAM_CORE_MAX_BLOCK_SIZE should be converted to a cmd line parameter
         throw runtime_error("invalid TX input vout");
 
     // append to transaction input list

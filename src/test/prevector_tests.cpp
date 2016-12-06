@@ -1,4 +1,5 @@
 // Copyright (c) 2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,7 +14,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(PrevectorTests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(prevector_tests, TestingSetup)  // BU harmonize suite name with filename
 
 template<unsigned int N, typename T>
 class prevector_tester {

@@ -3,10 +3,11 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
-
+import pdb
 from mininode import *
 from blockstore import BlockStore, TxStore
 from util import p2p_port
+import time
 
 '''
 This is a tool for comparing two or more bitcoinds to each other
@@ -221,7 +222,7 @@ class TestManager(object):
                 blockhash in node.block_request_map and node.block_request_map[blockhash]
                 for node in self.test_nodes
             )
-
+        time.sleep(1)  # The BU xthin preferential thinblock timer will delay sync so we need to wait longer for sync
         # --> error if not requested
         if not wait_until(blocks_requested, attempts=20*num_blocks):
             # print [ c.cb.block_request_map for c in self.connections ]
@@ -268,6 +269,8 @@ class TestManager(object):
             for c in self.connections:
                 if outcome is None:
                     if c.cb.bestblockhash != self.connections[0].cb.bestblockhash:
+                        print "Node ", c.addr, " has best block ", hex(c.cb.bestblockhash), ". Expecting ", hex(self.connections[0].cb.bestblockhash)
+                        # pdb.set_trace()
                         return False
                 elif isinstance(outcome, RejectResult): # Check that block was rejected w/ code
                     if c.cb.bestblockhash == blockhash:
@@ -279,7 +282,11 @@ class TestManager(object):
                         print 'Block rejected with %s instead of expected %s: %064x' % (c.cb.block_reject_map[blockhash], outcome, blockhash)
                         return False
                 elif ((c.cb.bestblockhash == blockhash) != outcome):
-                    # print c.cb.bestblockhash, blockhash, outcome
+                    print "Node ", c.addr, " has best block ", hex(c.cb.bestblockhash), ". Expecting ", hex(blockhash), outcome
+                    print "Quick   RPC returns", c.rpc.getbestblockhash()
+                    time.sleep(5)
+                    print "Delayed RPC returns", c.rpc.getbestblockhash()
+		    # pdb.set_trace()
                     return False
             return True
 

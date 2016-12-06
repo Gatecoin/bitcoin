@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -89,6 +90,18 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     fCheckpointsEnabled = false;
 
     // Simple block creation, nothing special yet:
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
+
+    // Simple block creation, with coinbase message
+    settingsToUserAgentString();
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
+
+    // Simple block creation, with coinbase message and miner message
+    settingsToUserAgentString();
+    minerComment = "I am a meat popsicle.";
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
+
+    minerComment = "flying is throwing yourself against the ground and missing.  This comment is WAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY too long.";
     BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
 
     // We can't make transactions until we have inputs
