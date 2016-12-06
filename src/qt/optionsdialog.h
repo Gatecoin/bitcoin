@@ -19,7 +19,8 @@ QT_BEGIN_NAMESPACE
 class QDataWidgetMapper;
 QT_END_NAMESPACE
 
-namespace Ui {
+namespace Ui
+{
 class OptionsDialog;
 }
 
@@ -41,10 +42,10 @@ class OptionsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit OptionsDialog(QWidget *parent, bool enableWallet);
+    explicit OptionsDialog(QWidget* parent, bool enableWallet);
     ~OptionsDialog();
 
-    void setModel(OptionsModel *model);
+    void setModel(OptionsModel* model);
     void setMapper();
 
 private Q_SLOTS:
