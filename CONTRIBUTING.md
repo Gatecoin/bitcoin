@@ -1,15 +1,15 @@
-Contributing to Bitcoin Core
-============================
+Contributing to Bitcoin
+=======================
 
-The Bitcoin Core project operates an open contributor model where anyone is welcome to contribute towards development in the form of peer review, testing and patches. This document explains the practical process and guidelines for contributing.
+The Bitcoin Unlimited project operates an open contributor model where anyone is welcome to contribute towards development in the form of peer review, testing and patches. This document explains the practical process and guidelines for contributing.
 
-Firstly in terms of structure, there is no particular concept of “Core developers” in the sense of privileged people. Open source often naturally revolves around meritocracy where longer term contributors gain more trust from the developer community. However, some hierarchy is necessary for practical purposes. As such there are repository “maintainers” who are responsible for merging pull requests as well as a “lead maintainer” who is responsible for the release cycle, overall merging, moderation and appointment of maintainers.
+Small features and patches can be contributed simply by issuing a pull request (PR) to this repository and working with the Bitcoin Unlimited Developer if any questions arise during the merge process.  Larger features should be proposed (and may be proposed before implemention) to the Bitcoin Unlimited members by writing a BUIP and submitting it to the bitcoin unlimited forum at: https://bitco.in/forum/forums/bitcoin-unlimited.15/.  If a proposal is accepted, then a contributor may issue a PR which will be merged.
 
 
 Contributor Workflow
 --------------------
 
-The codebase is maintained using the “contributor workflow” where everyone without exception contributes patch proposals using “pull requests”. This facilitates social contribution, easy testing and peer review.
+The codebase is maintained using the “contributor workflow” where everyone without exception contributes patch proposals using “pull requests” (PRs). This facilitates social contribution, easy testing and peer review.
 
 To contribute a patch, the workflow is as follows:
 
@@ -32,7 +32,7 @@ Please refer to the [Git manual](https://git-scm.com/doc) for more information a
 
 The title of the pull request should be prefixed by the component or area that the pull request affects. Examples:
 
-    Consensus: Add new opcode for BIP-XXXX OP_CHECKAWESOMESIG
+    Consensus: Add new opcode for BUIPXXX OP_CHECKAWESOMESIG
     Net: Automatically create hidden service, listen on Tor
     Qt: Add feed bump button
     Trivial: fix typo
@@ -67,9 +67,9 @@ Project maintainers aim for a quick turnaround on refactoring pull requests, so 
 "Decision Making" Process
 -------------------------
 
-The following applies to code changes to the Bitcoin Core project (and related projects such as libsecp256k1), and is not to be confused with overall Bitcoin Network Protocol consensus changes.
+The following applies to code changes to the Bitcoin Unlimited project (and related projects such as libsecp256k1), and is not to be confused with overall Bitcoin Network Protocol consensus changes.
 
-Whether a pull request is merged into Bitcoin Core rests with the project merge maintainers and ultimately the project lead. 
+Whether a pull request is merged into Bitcoin Unlimited rests with the project merge maintainers and ultimately the project lead. 
 
 Maintainers will take into consideration if a patch is in line with the general principles of the project; meets the minimum standards for inclusion; and will judge the general consensus of contributors.
 
@@ -107,4 +107,4 @@ Where a patch set proposes to change the Bitcoin consensus, it must have been di
 Release Policy
 --------------
 
-The project leader is the release manager for each Bitcoin Core release.
+The project leader is the release manager for each Bitcoin Unlimited release.

@@ -1,4 +1,4 @@
-<TS language="bs" version="2.1">
+<TS language="bs" version="2.0">
 <context>
     <name>AddressBookPage</name>
     </context>
@@ -18,7 +18,7 @@
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Bitcoin Jezrga</translation>
     </message>
     </context>
@@ -37,14 +37,14 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Bitcoin Jezrga</translation>
     </message>
     </context>
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Bitcoin Jezrga</translation>
     </message>
     </context>
@@ -112,7 +112,7 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Bitcoin Jezrga</translation>
     </message>
     </context>

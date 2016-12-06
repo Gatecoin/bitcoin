@@ -1,5 +1,5 @@
-Bitcoin Core 0.12.1
-=====================
+Bitcoin Unlimited 0.12.1b
+=========================
 
 Setup
 ---------------------
@@ -7,7 +7,6 @@ Setup
 
 - [Getting the most out of Xtreme thinblocks](bu-xthin.md)
 - [Setting up an Xpedited Relay Network](bu-xpedited-forwarding.md)
-[Bitcoin Core](http://bitcoin.org/en/download) is the original Bitcoin client and it builds the backbone of the network. However, it downloads and stores the entire history of Bitcoin transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
 
 Running
 ---------------------
@@ -32,7 +31,7 @@ Unpack the files into a directory, and then run bitcoin-qt.exe.
 
 ### OS X
 
-Drag Bitcoin-Core to your applications folder, and then run Bitcoin-Core.
+Drag Bitcoin-Unlimited to your applications folder, and then run Bitcoin-Unlimited.
 
 ### Need Help?
 

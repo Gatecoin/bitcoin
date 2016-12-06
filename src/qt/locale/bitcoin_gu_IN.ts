@@ -1,26 +1,6 @@
-<TS language="bg_BG" version="2.1">
+<TS language="gu_IN" version="2.0">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Right-click to edit address or label</source>
-        <translation>Клик с десен бутон на мишката за промяна на адрес или етикет</translation>
-    </message>
-    <message>
-        <source>Create a new address</source>
-        <translation>Създай нов адрес</translation>
-    </message>
-    <message>
-        <source>&amp;New</source>
-        <translation>Нов</translation>
-    </message>
-    <message>
-        <source>&amp;Copy</source>
-        <translation>Копирай</translation>
-    </message>
-    <message>
-        <source>C&amp;lose</source>
-        <translation>Затвори</translation>
-    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
@@ -29,18 +9,7 @@
     <name>AskPassphraseDialog</name>
     </context>
 <context>
-    <name>BanTableModel</name>
-    </context>
-<context>
     <name>BitcoinGUI</name>
-    <message>
-        <source>Bitcoin Unlimited</source>
-        <translation>Биткойн ядро</translation>
-    </message>
-    <message>
-        <source>&amp;About Bitcoin Unlimited</source>
-        <translation>За Биткойн ядрото</translation>
-    </message>
     </context>
 <context>
     <name>ClientModel</name>
@@ -56,21 +25,9 @@
     </context>
 <context>
     <name>HelpMessageDialog</name>
-    <message>
-        <source>Bitcoin Unlimited</source>
-        <translation>Биткойн ядро</translation>
-    </message>
-    <message>
-        <source>About Bitcoin Unlimited</source>
-        <translation>За Биткойн ядрото</translation>
-    </message>
     </context>
 <context>
     <name>Intro</name>
-    <message>
-        <source>Bitcoin Unlimited</source>
-        <translation>Биткойн ядро</translation>
-    </message>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -119,10 +76,6 @@
     </context>
 <context>
     <name>SplashScreen</name>
-    <message>
-        <source>Bitcoin Unlimited</source>
-        <translation>Биткойн ядро</translation>
-    </message>
     </context>
 <context>
     <name>TrafficGraphWidget</name>

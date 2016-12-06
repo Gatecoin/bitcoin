@@ -1,13 +1,13 @@
-Bitcoin Core version 0.12.1 is now available from:
+Bitcoin Unlimited version 0.12.1 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.12.1/>
+  <https://bitcoinunlimited.info/download>
 
 This is a new minor version release, including the BIP9, BIP68 and BIP112
 softfork, various bugfixes and updated translations.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/BitcoinUnlimited/BitcoinUnlimited/issues>
 
 Upgrading and downgrading
 =========================
@@ -195,4 +195,3 @@ Thanks to everyone who directly contributed to this release:
 - Wladimir J. van der Laan
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
-

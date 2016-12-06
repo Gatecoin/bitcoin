@@ -1,8 +1,8 @@
-Source: bitcoin
+Source: bitcoinunlimited
 Section: utils
 Priority: optional
-Maintainer: Jonas Smedegaard <dr@jones.dk>
-Uploaders: Micah Anderson <micah@debian.org>
+Maintainer: Andrew Stone <g.andrew.stone@gmail.com>
+Uploaders: Andrea Suisani <sickpig@gmail.com>
 Build-Depends: debhelper,
  devscripts,
  automake,
@@ -24,9 +24,9 @@ Build-Depends: debhelper,
  libprotobuf-dev, protobuf-compiler,
  python
 Standards-Version: 3.9.2
-Homepage: https://bitcoincore.org/
-Vcs-Git: git://github.com/bitcoin/bitcoin.git
-Vcs-Browser: https://github.com/bitcoin/bitcoin
+Homepage: https://www.bitcoinunlimited.info/
+Vcs-Git: git://github.com/BitcoinUnlimited/BitcoinUnlimited.git
+Vcs-Browser: https://github.com/BitcoinUnlimited/BitcoinUnlimited
 
 Package: bitcoind
 Architecture: any
@@ -35,7 +35,7 @@ Description: peer-to-peer network based digital currency - daemon
  Bitcoin is an experimental new digital currency that enables instant
  payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer
  technology to operate with no central authority: managing transactions
- and issuing money are carried out collectively by the network. Bitcoin Core
+ and issuing money are carried out collectively by the network. Bitcoin Unlimited
  is the name of the open source software which enables the use of this currency.
  .
  This package provides the daemon, bitcoind, and the CLI tool
@@ -48,7 +48,7 @@ Description: peer-to-peer network based digital currency - Qt GUI
  Bitcoin is an experimental new digital currency that enables instant
  payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer
  technology to operate with no central authority: managing transactions
- and issuing money are carried out collectively by the network. Bitcoin Core
+ and issuing money are carried out collectively by the network. Bitcoin Unlimited
  is the name of the open source software which enables the use of this currency.
  .
  This package provides Bitcoin-Qt, a GUI for Bitcoin based on Qt.
@@ -60,8 +60,7 @@ Description: peer-to-peer digital currency - standalone transaction tool
  Bitcoin is an experimental new digital currency that enables instant
  payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer
  technology to operate with no central authority: managing transactions
- and issuing money are carried out collectively by the network. Bitcoin Core
- is the name of the open source software which enables the use of this currency.
+ and issuing money are carried out collectively by the network.
  .
  This package provides bitcoin-tx, a command-line transaction creation
  tool which can be used without a bitcoin daemon.  Some means of

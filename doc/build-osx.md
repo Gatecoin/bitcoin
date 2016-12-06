@@ -40,7 +40,7 @@ NOTE: Building with Qt4 is still supported, however, could result in a broken UI
 
 1. Clone the GitHub tree to get the source code and go into the directory.
 
-        git clone https://github.com/bitcoin/bitcoin.git
+        git clone https://github.com/BitcoinUnlimited/BitcoinUnlimited.git
         cd bitcoin
 
 2.  Build bitcoin-core:
@@ -81,7 +81,7 @@ You can ignore this section if you are building `bitcoind` for your own use.
 
 bitcoind/bitcoin-cli binaries are not included in the Bitcoin-Qt.app bundle.
 
-If you are building `bitcoind` or `Bitcoin Core` for others, your build machine should be set up
+If you are building `bitcoind` or `bitcoin-qt` for others, your build machine should be set up
 as follows for maximum compatibility:
 
 All dependencies should be compiled with these flags:
@@ -90,7 +90,7 @@ All dependencies should be compiled with these flags:
  -arch x86_64
  -isysroot $(xcode-select --print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk
 
-Once dependencies are compiled, see [doc/release-process.md](release-process.md) for how the Bitcoin Core
+Once dependencies are compiled, see [doc/release-process.md](release-process.md) for how the Bitcoin
 bundle is packaged and signed to create the .dmg disk image that is distributed.
 
 Running
